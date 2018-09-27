@@ -1,0 +1,36 @@
+
+<form id="login" method="post">
+  <input id="email" type="email" name="name" placeholder="Email">
+  <br><br>
+  <input id="passw" type="password" name="password" placeholder="Password">
+<br><br>
+<input type="submit" value="Login">
+</form>
+
+<script type="text/javascript">
+
+  const loginForm = document.getElementById('login');
+
+/*
+  var emailstr = document.getElementById('email').value;
+  var passwstr = document.getElementById('passw').value;
+
+  const params = new URLSearchParams();
+  params.set('email',emailstr);
+  params.set('password',passwstr);*/
+
+  const data = new URLSearchParams(new FormData(loginForm));
+
+  loginForm.addEventListener( 'submit', event =>{
+    event.preventDefault();
+    fetch('/api/signIn', {
+      method: 'POST',
+       headers: {'Content-Type':'application/x-www-form-urlencoded'},
+      body: data
+    }).then(res => res.json())
+      .then(data => {
+        console.log(data);
+        localStorage.setItem('token', data.token);
+        });
+  })
+</script>

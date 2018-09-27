@@ -1,0 +1,40 @@
+
+<form id="auth" method="POST">
+  <input id="name" type="text" name="name" placeholder="Name">
+  <br>
+ <input id="email" type="email" name="email" placeholder="Email">
+<br>
+<input id="password" type="password" name="password" placeholder="Password">
+<br><br>
+<input type="submit" value="register">
+</form>
+
+<script type="text/javascript">
+
+ const loginForm = document.querySelector('#auth');
+  
+  loginForm.addEventListener('submit', event =>{
+    event.preventDefault();
+
+  const data = new URLSearchParams(new FormData(loginForm));
+
+    /*var namestr = document.getElementById('name').value;
+    var emailstr = document.getElementById('email').value;
+    var passwstr = document.getElementById('password').value
+
+  const params = new URLSearchParams();
+  params.set('name',namestr);
+  params.set('email',emailstr);
+  params.set('password',passwstr);*/
+
+
+   fetch('api/signUp', {
+      method: 'POST',
+      body: data
+    }).then(res => res.json())
+      .then(data => {
+        console.log(data);
+       // localStorage.setItem('token', data.token);
+        });
+  })
+</script>
