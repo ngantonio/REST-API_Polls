@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const moment = require('moment'); 
 const Schema = mongoose.Schema;
 
 const PollSchema = new Schema({
@@ -35,8 +34,7 @@ const PollSchema = new Schema({
 PollSchema.pre('save', function(next){
   let date = new Date();
   let day = date.getDate();
-  date.setDate(day -30);
-  console.log(date)
+  date.setDate(day + 30);
   this.expired_at = date;
   next();
 });
