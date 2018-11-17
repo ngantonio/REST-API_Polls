@@ -2,13 +2,13 @@ const mongoose = require('mongoose');
 const moment = require('moment'); 
 const Schema = mongoose.Schema;
 
-const TokenSchema = Schema({
+const SessionSchema = Schema({
 
   uid:{
     type: Schema.Types.ObjectId,
     ref: 'User'
   },
-  tokenHash:  string,
+  tokenHash: string,
   valid_from:{
     type: Date, 
     default: Date.now()
@@ -20,4 +20,4 @@ const TokenSchema = Schema({
 
 });
 
-module.exports = mongoose.model('Token',TokenSchema);
+module.exports = mongoose.model('Session',SessionSchema);

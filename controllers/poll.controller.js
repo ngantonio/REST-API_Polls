@@ -1,4 +1,5 @@
 const Poll = require('../models/poll.model');
+const auth = require('./auth.controller');
 
 
 function getAllPolls(req, res) {
@@ -26,13 +27,9 @@ function getPollById(req, res) {
 
     if (err)
       return res.status(500).json({
-        message: "Error inesperado al realizar la peticion",
-        err
-      });
+        message: "Error inesperado al realizar la peticion",err});
     if (!poll)
-      return res.status(404).json({
-        message: `No existe la encuesta bajo el id "${ pollId }"`
-      });
+      return res.status(404).json({message: `No existe la encuesta bajo el id "${ pollId }"`});
 
     res.status(200).json({
       poll
@@ -41,20 +38,50 @@ function getPollById(req, res) {
 
 }
 
+/*
+{
+  "created_by": "5b9eb3cc2ca71c1ebec8f848",
+  "description": "Esto es una encuesta para probar la funcion post new",
+  "questions":[
+    {
+      "name": "Respuesta 1",
+      "options": ["uno","dos", "tres", "cuatro"]
+    },
+    {
+      "name": "Respuesta 2",
+      "options": ["cinco","seis","siete"]
+    }
+  ]
+}
+*/
+
 function newPoll(req, res) {
 
+  /** Validaciones **/
+
+  if(!req.body.description)
+    return res.status(403).json({message: "Se debe proporcionar una descripcion para la encuesta"});
+  if(!req.body.questions)
+    return res.status(403).json({message: "Se debe proporcionar un arreglo de preguntas valido"});
+  if(req.body.questions.length == 0)
+    return res.status(403).json({message: "Se debe proporcionar un arreglo de preguntas valido"});
+  /******************/
+
+
   let poll = new Poll();
-  poll.created_by = "5b9eb3cc2ca71c1ebec8f848",
-    poll.description = req.body.description,
-    poll.questions = req.body.questions
+  let questionsArray = new Array();
 
+  poll.created_by = "5b9c766d0a8b5b1b08446d18";
+  poll.description = req.body.description;
+
+  //Convierte cada pregunta en el formato del modelo.
+  for (var i = 0; i < req.body.questions.length; i++)
+    questionsArray.push(convertQuestion(req.body.questions[i]));
+  
+  poll.questions = questionsArray;
   poll.save((err, pollStored) => {
-
     if (err)
-      res.status(500).json({
-        message: "Error al almacenar en la base de datos",
-        err
-      });
+      res.status(500).json({message: "Error al almacenar en la base de datos",err});
     res.status(200).json({
       message: "La encuesta se ha recibido correctamente",
       _id: `${ pollStored._id }`
@@ -70,8 +97,7 @@ function deletePoll(req, res) {
   Poll.findById(pollId, (err, poll) => {
 
     if (err) return res.status(500).json({
-      message: "Error al localizar encuesta!",
-      err
+      message: "Error al localizar encuesta!",err
     });
     if (!poll) return res.status(404).json({
       message: `No existe la encuesta bajo el id "${ pollId }"`
@@ -86,24 +112,6 @@ function deletePoll(req, res) {
   });
 }
 
-function updatePoll(req, res) {
-
-  let pollId = req.params.productId;
-  let newPoll = req.body;
-
-  Poll.findByIdAndUpdate(pollId, newPoll, (err, pollUpdated) => {
-
-    if (err)
-      return res.status(500).json({
-        message: "Error inesperado al realizar la actualización",
-        err
-      });
-    res.status(200).json({
-      pollUpdated
-    });
-  });
-}
-
 function getPollsActive(req, res) {
 
   Poll.find({
@@ -113,21 +121,14 @@ function getPollsActive(req, res) {
   }, (err, polls) => {
     if (err)
       return res.status(500).json({
-        message: "Error inesperado al realizar la peticion",
-        err
-      });
+        message: "Error inesperado al realizar la peticion",err});
     if (!polls)
       return res.status(404).json({
-        message: "No existen encuestas activas actualmente"
-      });
+        message: "No existen encuestas activas actualmente"});
 
-    res.status(200).json({
-      polls
-    });
+    res.status(200).json({polls});
   });
 }
-
-/* la respuesta mas votada, la respueta menos votada y la cantidad de veces que la encuesta fue tomada */
 
 function getPollStats(req, res) {
 
@@ -165,47 +166,49 @@ function getCompleteQuestions(req, res) {
   Poll.findById(pollId, (err, poll) => {
 
     if (err)
-      return res.status(500).json({
-        message: "Error inesperado al realizar la peticion",
-        err
-      });
+      return res.status(500).json({message: "Error inesperado al realizar la peticion",err});
     if (!poll.questions)
-      return res.status(404).json({
-        message: `Esta encuesta no tiene preguntas disponibles`
-      });
+      return res.status(404).json({message: `Esta encuesta no tiene preguntas disponibles`});
 
     res.status(200).json(poll.questions);
   });
 
 }
 
+/*
+retorna un array de la forma:
+[
+  {
+    "name": "Esta usted de acuerdo con bla bla bla",
+    "options":["uno","dos","tres"]
+  }
+]
+
+*/
 function getSimpleQuestions(req, res) {
 
   let pollId = req.params.pollId;
+  //retorna un array de objetos
   let simpleQuestions = new Array();
 
   Poll.findById(pollId, (err, poll) => {
-
+    getPollById
     if (err)
-      return res.status(500).json({
-        message: "Error inesperado al realizar la peticion",
-        err
-      });
+      return res.status(500).json({message: "Error inesperado al realizar la peticion",err});
     if (!poll.questions)
-      return res.status(404).json({
-        message: "Esta encuesta no tiene preguntas disponibles"
-      });
+      return res.status(404).json({message: "Esta encuesta no tiene preguntas disponibles"});
 
+    /*Por cada pregunta, creamos un nuevo objeto con dos propiedades
+      el nombre de la pregunta y el arreglo de opciones*/
     for (var i = 0; i < poll.questions.length; i++) {
       let questions = new Object();
       questions.name = String;
-      questions.answers = new Array();
-
+      questions.options = new Array();
       questions.name = poll.questions[i].name;
+      /* recorremos el arreglo de respuestas que nos regresa el modelo
+      y añadimos cada una de las opciones al arreglo que enviaremos al usuario*/
       for (var j = 0; j < poll.questions[i].options.length; j++) {
-        let options = new Object();
-        options.option = poll.questions[i].options[j].option;
-        questions.answers.push(options);
+        questions.options.push(poll.questions[i].options[j].option)
       }
       simpleQuestions.push(questions);
     }
@@ -214,49 +217,54 @@ function getSimpleQuestions(req, res) {
   });
 
 }
-//se puede modificar para que reciba un arreglo de questions
+
+/*
+recibe un json de la forma:
+{  
+  "name": "Esta usted de acuerdo con bla bla bla",
+  "options":["uno","dos","tres"]
+}
+puede modificarse para que reciba un arreglo de preguntas
+*/
+
 function addQuestion(req, res) {
 
   let pollId = req.params.pollId;
-  let newQuestion = req.body;
+
+  /* validaciones */
+  if(!req.body.name)
+    return res.status(403).json({message: "Se debe proporcionar un nombre para la pregunta"});
+  if(!req.body.options)
+    return res.status(403).json({message: "Se debe proporcionar un arreglo de preguntas valido"});
+  if(req.body.options.length == 0)
+    return res.status(403).json({message: "Se debe proporcionar un arreglo de preguntas valido"});
+  
+  let newQuestion = convertQuestion(req.body);
 
   //buscamos la encuesta para extraer el arreglo de preguntas
   Poll.findById(pollId, (err, poll) => {
 
     if (err)
-      return res.status(500).json({
-        message: "Error inesperado al realizar la peticion",
-        err
-      });
+      return res.status(500).json({message: "Error inesperado al realizar la peticion",err});
     if (!poll.questions)
-      return res.status(404).json({
-        message: "Esta encuesta no tiene preguntas disponibles"
-      });
+      return res.status(404).json({message: "Esta encuesta no tiene preguntas disponibles"});
 
     let newArray = poll.questions;
     newArray.push(newQuestion);
 
-    //actualizamos solo el array de questions, añadiendo la nueva pregunta
-    Poll.updateOne({
-      _id: pollId
-    }, {
-      $set: {
-        questions: newArray
-      }
-    }, (err, rows) => {
+    //actualizamos solo el array de quest getPollByIdions, añadiendo la nueva pregunta
+    Poll.updateOne({_id: pollId}, {$set: {questions: newArray}}, (err, rows) => {
 
       if (err)
-        return res.status(500).json({
-          message: "Error inesperado al realizar la actualización",
-          err
-        });
+        return res.status(500).json({message: "Error inesperado al realizar la actualización",err});
       res.status(200).json(rows);
     });
   });
 
 }
 
-/* PRIVATE */
+/***************** PRIVATE *********************/
+
 function moreVoted(array) {
 
   let m_voted = new Object();
@@ -282,6 +290,45 @@ function moreVoted(array) {
   return m_voted;
 }
 
+/*
+se necesita convertir el json enviado por el usuario de la forma simple:
+
+{  
+  "name": "Esta usted de acuerdo con bla bla bla",
+  "options":["uno","dos","tres"]
+}
+
+en un json valido para el modelo de datos de la forma:
+
+{
+  "name": "Esta usted de acuerdo con bla bla bla",
+  options":[
+    {"option": "uno"},
+    {"option": "dos"}    
+  ]
+}
+
+donde cada elemento del array options, es un objeto
+*/
+
+function convertQuestion(body){
+
+  let question = new Object();
+
+  //almacenamos el nombre que viene en el body y creamos un arreglo
+  question.name = body.name;
+  question.options =  new Array();
+
+  //por cada elemento del array de opciones, se crea un nuevo objeto
+  for (var i = 0; i < body.options.length; i++){
+    let value = new Object();
+    value.option = body.options[i];
+    question.options.push(value);
+  }
+  return question;
+}
+
+
 
 module.exports = {
   getAllPolls,
@@ -289,7 +336,6 @@ module.exports = {
   deletePoll,
   getCompleteQuestions,
   getSimpleQuestions,
-  updatePoll,
   addQuestion,
   getPollById,
   getPollsActive,
@@ -297,7 +343,6 @@ module.exports = {
 }
 
 /*
-
 Test:
 
 {
@@ -321,5 +366,4 @@ Test:
     }
   ]
 }
-
 */

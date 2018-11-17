@@ -9,11 +9,9 @@ function isAuth(req, res, next) {
 
   //utilizamos la promesa que regresa el token service
   tokenService.decodeToken(token)
-    /*fue exitosa la comprobacion y creamos una neuva propiedad
-     en el request llamada user que contiene el token del usuario */
+    /*fue exitosa la comprobacion y pasamos a next() */
     .then(response =>{
       console.log(response);
-      req.userToken = response;
       next();
     })
     .catch(err =>{

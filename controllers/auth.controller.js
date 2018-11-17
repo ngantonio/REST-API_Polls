@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const User = require('../models/user.model');
 const userController = require('../controllers/user.controller');
 const tokenService = require('../services/tokenService');
@@ -34,7 +33,6 @@ function signIn(req,res) {
       return res.status(404).json({message: "No existe el usuario"});
 
     //comprobamos si la contraseña es correcta:
-    console.log(req.body);
     user.comparePassword(req.body.password, (err, isMatch) =>{     
       if(err) 
         return res.status(500).json({message:`Error al ingresar: ${err}` });
@@ -42,11 +40,12 @@ function signIn(req,res) {
       if(!isMatch) 
         return res.status(403).json({message: "Error al iniciar sesion"});
         
-      // Si todo ha ido bien, creamos el token y lo guardamos en el request :
+      // Si todo ha ido bien, creamos el token, creamos y guardamos una sesion:
       var token = tokenService.createToken(user);
-      req.userToken = token;
+
       // Actualizamos la fecha de inicio de sesion
       userController.updateLastLogin(user._id, Date.now());
+      //enviamos una respuesta
       res.status(200).json({message:"Incio de sesion completo", token});
     });
   }).select('_id displayName email +password');
@@ -54,5 +53,6 @@ function signIn(req,res) {
 
 module.exports = {
   signIn,
-  signUp
+  signUp,
+  getSession
 }
